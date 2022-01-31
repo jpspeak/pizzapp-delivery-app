@@ -5,7 +5,7 @@ import { AiFillInstagram } from "react-icons/ai";
 const Footer = () => {
   return (
     <>
-      <Box as='footer' bgColor='yellow.900' mt='40' px='4' py='12' color='white'>
+      <Box as='footer' bgColor='yellow.900' mt='40' py='12' color='white'>
         <Container maxW='container.lg'>
           <Grid templateColumns={{ base: "repeat(1, 1fr)", md: "repeat(3, 1fr)" }} gap={8}>
             <Box>

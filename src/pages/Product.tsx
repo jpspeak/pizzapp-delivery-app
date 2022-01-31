@@ -1,4 +1,4 @@
-import { Box, Button, Container, FormControl, FormLabel, Grid, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Text } from "@chakra-ui/react";
+import { Box, Button, Container, FormControl, FormLabel, Grid, Image, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -58,11 +58,11 @@ const Product = () => {
   return (
     <>
       <Container maxW='container.lg'>
-        <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }}>
-          <Box position='relative' pb='100%'>
-            <img src={product?.image} style={{ position: "absolute" }} alt='pizza' />
+        <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }} columnGap={12}>
+          <Box position='relative' pb='100%' mt='8'>
+            <Image src={product?.image} position='absolute' alt='pizza' />
           </Box>
-          <Box p='4'>
+          <Box>
             <Text mt='12' fontSize='2xl' fontWeight='bold'>
               {product?.name}
             </Text>
