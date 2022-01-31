@@ -7,7 +7,7 @@ const HeaderNavLink = ({ to, text }: { to: string; text: string }) => {
   return (
     <>
       <Link to={to}>
-        <Text py='0' lineHeight={{ base: "taller", md: "short" }} px='0' whiteSpace='nowrap' borderBottom='2px' borderColor={match ? "" : "transparent"}>
+        <Text py='0' lineHeight={{ base: "10", md: "short" }} px='0' whiteSpace='nowrap' borderBottom='4px' borderColor={match ? "" : "transparent"}>
           {text}
         </Text>
       </Link>
