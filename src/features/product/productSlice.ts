@@ -1,27 +1,33 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { productAPI } from "../../api/productAPI";
+import { doc, getDoc } from "firebase/firestore";
+import { StateType } from "../../common/types";
+import { db } from "../../config/firebase";
 import { RootState } from "../../store";
 
 export interface ProductType {
-  id: number;
-  attributes: {
-    name: string;
-    description: string;
-    price: number;
+  id: string;
+  name: string;
+  description: string;
+  prices: {
+    regular: number;
+    large: number;
+    extraLarge: number;
   };
+  image: string;
 }
 
 export interface ProductInitialState {
   product?: ProductType;
-  loading: boolean;
-  error?: string;
+  fetchState: StateType;
 }
 
-const initialState: ProductInitialState = { loading: false };
+const initialState: ProductInitialState = { fetchState: "READY" };
 
-export const fetchProduct = createAsyncThunk("product/fetchOneStatus", async (productId: number) => {
-  const response = await productAPI.getOne(productId);
-  return response.data.data;
+export const productFetch = createAsyncThunk("product/fetchStatus", async (productId: string) => {
+  const productDocRef = doc(db, "products", productId);
+  const productSnapshot = await getDoc(productDocRef);
+  const product = productSnapshot.exists() && productSnapshot.data();
+  return { id: productSnapshot.id, ...product } as ProductType;
 });
 
 export const productSlice = createSlice({
@@ -29,18 +35,20 @@ export const productSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: builder => {
-    builder.addCase(fetchProduct.pending, state => {
-      state.loading = true;
+    //Get products
+    builder.addCase(productFetch.pending, state => {
+      state.fetchState = "LOADING";
     });
-    builder.addCase(fetchProduct.fulfilled, (state, action) => {
-      state.loading = false;
+    builder.addCase(productFetch.fulfilled, (state, action) => {
+      state.fetchState = "READY";
       state.product = action.payload;
     });
-    builder.addCase(fetchProduct.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.error.message;
+    builder.addCase(productFetch.rejected, (state, action) => {
+      state.fetchState = "ERROR";
+      console.log(action.error);
     });
   }
 });
-export const selectProduct = (state: RootState) => state.product;
+export const selectProduct = (state: RootState) => state.product.product;
+export const selectProductFetchState = (state: RootState) => state.product.fetchState;
 export default productSlice.reducer;

@@ -1,5 +1,5 @@
 import { Box, Container } from "@chakra-ui/react";
-import BestSelling from "../components/BestSelling/Index";
+import BestSeller from "../components/BestSeller/Index";
 import Carousel from "../components/Carousel/Index";
 import ForYou from "../components/ForYou/Index";
 
@@ -11,7 +11,7 @@ const Home = () => {
           <Carousel />
         </Container>
       </Box>
-      <BestSelling />
+      <BestSeller />
       <ForYou />
     </>
   );

@@ -1,6 +1,6 @@
 import { Box, Flex, HStack, useRadio, useRadioGroup } from "@chakra-ui/react";
 
-export type SizesType = "R" | "L" | "XL";
+export type PizzaSizesType = "regular" | "large" | "extraLarge";
 
 const RadioPizza = (props: any) => {
   const { getInputProps, getCheckboxProps } = useRadio(props);
@@ -36,12 +36,12 @@ const RadioPizza = (props: any) => {
   );
 };
 
-function RadioPizzaGroup({ onChange }: { onChange: (value: SizesType) => void }) {
-  const options = ["R", "L", "XL"];
+function RadioPizzaGroup({ onChange }: { onChange: (value: PizzaSizesType) => void }) {
+  const options = ["regular", "large", "extraLarge"];
 
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: "size",
-    defaultValue: "R",
+    defaultValue: "regular",
     onChange
   });
 
@@ -53,7 +53,9 @@ function RadioPizzaGroup({ onChange }: { onChange: (value: SizesType) => void })
         const radio = getRadioProps({ value });
         return (
           <RadioPizza key={value} {...radio}>
-            {value}
+            {value === "regular" && "R"}
+            {value === "large" && "L"}
+            {value === "extraLarge" && "XL"}
           </RadioPizza>
         );
       })}

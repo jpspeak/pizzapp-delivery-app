@@ -1,104 +1,87 @@
-import { Button, Text, Container, Divider, Flex, Grid, HStack, Image, Input, Spacer, VStack } from "@chakra-ui/react";
+import { Text, Container, Divider, Flex, Grid, VStack } from "@chakra-ui/react";
+import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { useEffect } from "react";
+import BagItem from "../components/BagItem/Index";
+import CouponInput from "../components/CouponInput/Index";
+import OrderSubmissionModal from "../components/OrderSubmissionModal/Index";
+import { db } from "../config/firebase";
+import { selectAuthUser } from "../features/auth/authSlice";
+import { BagItemType, selectBagItems, bagSetBagItems, selectBagOrderSummary, BagItemWithProductType, selectCoupon } from "../features/bag/bagSlice";
+import { ProductType } from "../features/product/productSlice";
+import { useAppDispatch, useAppSelector } from "../hooks";
 
 const Bag = () => {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(selectAuthUser);
+  const bagItems = useAppSelector(selectBagItems);
+  const coupon = useAppSelector(selectCoupon);
+  const { total, subtotal } = useAppSelector(selectBagOrderSummary);
+
+  let unsubscribe: () => void;
+
+  const fetchBag = async (userId: string) => {
+    const bagColRef = collection(db, "user_data", userId, "bag");
+    unsubscribe = onSnapshot(bagColRef, async bagSnapshot => {
+      const bagItems = await Promise.all(
+        bagSnapshot.docs.map(async bagItemSnapshot => {
+          const bagItemId = bagItemSnapshot.id;
+          const bagItem = bagItemSnapshot.data() as BagItemType;
+          const productDocRef = doc(db, "products", bagItem.productId);
+          const productSnapshot = await getDoc(productDocRef);
+          const productId = productSnapshot.id;
+          const product = productSnapshot.data() as ProductType;
+          return { id: bagItemId, productId, product, size: bagItem.size, quantity: bagItem.quantity };
+        })
+      );
+      dispatch(bagSetBagItems(bagItems as BagItemWithProductType[]));
+    });
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchBag(user?.id);
+    }
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  if (!user) return <></>;
   return (
     <>
       <Container maxW='container.lg' minHeight='200px'>
         <Text my='12' fontSize='lg' fontWeight='bold'>
           Order Summary
         </Text>
-        <Grid gridTemplateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={20}>
-          <VStack alignItems='normal'>
-            <HStack px='4' py='2' shadow='base' spacing='4' alignItems='stretch'>
-              <Image src='/logo.png' alt='pizza' h='16' w='16' />
-              <VStack alignItems='normal' justifyContent='space-between'>
-                <Text fontWeight='bold'>Product Name</Text>
-                <Text color='blackAlpha.700' mt='2'>
-                  Size: L
-                </Text>
+        {bagItems.length > 0 && (
+          <>
+            <Grid gridTemplateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={20}>
+              <VStack alignItems='normal'>
+                {bagItems.map(bagItem => (
+                  <BagItem key={bagItem.id} bagItem={bagItem} />
+                ))}
               </VStack>
-              <Spacer />
-              <VStack alignItems='end'>
-                <HStack w='100px'>
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    -
-                  </Button>
-                  <Input readOnly size='xs' value='10' border='none' p='0' textAlign='center' />
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    +
-                  </Button>
-                </HStack>
-                <Spacer />
-                <Text fontWeight='bold'>$60</Text>
+              <VStack alignItems='normal' spacing={4}>
+                <CouponInput />
+                <Flex justifyContent='space-between'>
+                  <Text fontSize='xl'>Subtotal</Text>
+                  <Text fontSize='xl'>${subtotal}</Text>
+                </Flex>
+                <Flex justifyContent='space-between'>
+                  <Text fontSize='xl'>Discount</Text>
+                  <Text fontSize='xl'>{coupon ? coupon?.discount * 100 : 0}%</Text>
+                </Flex>
+                <Divider />
+                <Flex justifyContent='space-between' fontSize='xl' fontWeight='bold'>
+                  <Text>Total</Text>
+                  <Text>${total}</Text>
+                </Flex>
+                <Flex justifyContent='stretch'>
+                  <OrderSubmissionModal />
+                </Flex>
               </VStack>
-            </HStack>
-            <HStack px='4' py='2' shadow='base' spacing='4' alignItems='stretch'>
-              <Image src='/logo.png' alt='pizza' h='16' w='16' />
-              <VStack alignItems='normal' justifyContent='space-between'>
-                <Text fontWeight='bold'>Product Name</Text>
-                <Text color='blackAlpha.700' mt='2'>
-                  Size: L
-                </Text>
-              </VStack>
-              <Spacer />
-              <VStack alignItems='end'>
-                <HStack w='100px'>
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    -
-                  </Button>
-                  <Input readOnly size='xs' value='10' border='none' p='0' textAlign='center' />
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    +
-                  </Button>
-                </HStack>
-                <Spacer />
-                <Text fontWeight='bold'>$60</Text>
-              </VStack>
-            </HStack>
-            <HStack px='4' py='2' shadow='base' spacing='4' alignItems='stretch'>
-              <Image src='/logo.png' alt='pizza' h='16' w='16' />
-              <VStack alignItems='normal' justifyContent='space-between'>
-                <Text fontWeight='bold'>Product Name</Text>
-                <Text color='blackAlpha.700' mt='2'>
-                  Size: L
-                </Text>
-              </VStack>
-              <Spacer />
-              <VStack alignItems='end'>
-                <HStack w='100px'>
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    -
-                  </Button>
-                  <Input readOnly size='xs' value='10' border='none' p='0' textAlign='center' />
-                  <Button rounded='none' size='xs' colorScheme='orange' fontSize='lg'>
-                    +
-                  </Button>
-                </HStack>
-                <Spacer />
-                <Text fontWeight='bold'>$60</Text>
-              </VStack>
-            </HStack>
-          </VStack>
-          <VStack alignItems='normal' spacing={4}>
-            <Flex justifyContent='space-between'>
-              <Input placeholder='Enter coupon' w='40'></Input>
-            </Flex>
-            <Flex justifyContent='space-between'>
-              <Text fontSize='xl'>Subtotal</Text>
-              <Text fontSize='xl'>$30</Text>
-            </Flex>
-            <Divider />
-            <Flex justifyContent='space-between' fontSize='xl' fontWeight='bold'>
-              <Text>Total</Text>
-              <Text>$100</Text>
-            </Flex>
-            <Flex justifyContent='stretch'>
-              <Button rounded='none' colorScheme='orange' width='full'>
-                PLACE ORDER
-              </Button>
-            </Flex>
-          </VStack>
-        </Grid>
+            </Grid>
+          </>
+        )}
       </Container>
     </>
   );

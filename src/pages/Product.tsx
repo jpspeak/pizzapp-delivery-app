@@ -2,28 +2,33 @@ import { Box, Button, Container, FormControl, FormLabel, Grid, NumberDecrementSt
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-// import AddedToBagAlert from "../components/AddedToBagAlert/Index";
-import RadioPizzaSize, { SizesType } from "../components/RadioPizzaSize/Index";
-import { add } from "../features/bag/bagSlice";
-import { fetchProduct, selectProduct } from "../features/product/productSlice";
+import AddedToBagAlert from "../components/AddedToBagAlert/Index";
+import RadioPizzaSize, { PizzaSizesType } from "../components/RadioPizzaSize/Index";
+import { openAuthModal, selectAuthUser } from "../features/auth/authSlice";
+import { bagAdd, selectBagAddState } from "../features/bag/bagSlice";
+import { selectProductFetchState, selectProduct, productFetch } from "../features/product/productSlice";
 import { useAppSelector } from "../hooks";
 
 interface FormDataType {
-  size: SizesType;
+  size: PizzaSizesType;
   quantity: number;
 }
 
 const Product = () => {
-  const { productId } = useParams();
+  const user = useAppSelector(selectAuthUser);
   const dispatch = useDispatch();
-  const { product, loading, error } = useAppSelector(selectProduct);
+  const bagAddState = useAppSelector(selectBagAddState);
+  const productFetchState = useAppSelector(selectProductFetchState);
+  const { productId } = useParams();
+  const product = useAppSelector(selectProduct);
 
   const [formdata, setFormdata] = useState<FormDataType>({
-    size: "R",
+    size: "regular",
     quantity: 1
   });
+  const [price, setPrice] = useState<number | undefined>(product?.prices.regular);
 
-  const handleChangeSize = (value: SizesType) => {
+  const handleChangeSize = (value: PizzaSizesType) => {
     setFormdata(prevState => ({ ...prevState, size: value }));
   };
 
@@ -33,32 +38,39 @@ const Product = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    product && dispatch(add({ ...formdata, product }));
+    if (user) {
+      product && dispatch(bagAdd({ productId: product.id, product, ...formdata }));
+    } else {
+      dispatch(openAuthModal());
+    }
   };
 
   useEffect(() => {
-    productId && dispatch(fetchProduct(+productId));
+    productId && dispatch(productFetch(productId));
   }, [productId, dispatch]);
 
-  if (error) return <p>Failed to load products</p>;
-  if (loading) return <p>Loading</p>;
+  useEffect(() => {
+    product && setPrice(product.prices[formdata.size] * formdata.quantity);
+  }, [formdata, product]);
+
+  if (productFetchState === "ERROR") return <p>Failed to load product.</p>;
+  if (productFetchState === "LOADING") return <p>Loading...</p>;
   return (
     <>
       <Container maxW='container.lg'>
         <Grid gridTemplateColumns={{ base: "1fr", md: "1fr 1fr" }}>
           <Box position='relative' pb='100%'>
-            <img src='/logo.png' style={{ position: "absolute" }} alt='pizza' />
+            <img src={product?.image} style={{ position: "absolute" }} alt='pizza' />
           </Box>
           <Box p='4'>
             <Text mt='12' fontSize='2xl' fontWeight='bold'>
-              {product?.attributes.name}
+              {product?.name}
             </Text>
             <Text mt='4' fontSize='lg' color='blackAlpha.700'>
-              {product?.attributes.description}
+              {product?.description}
             </Text>
             <Text mt='4' fontSize='2xl' fontWeight='bold' color='orange.500'>
-              $ {product?.attributes.price}
+              $ {price}
             </Text>
             <form onSubmit={handleSubmit}>
               <FormControl mt='12'>
@@ -80,14 +92,14 @@ const Product = () => {
                 </NumberInput>
               </FormControl>
 
-              <Button colorScheme='orange' mt='12' rounded='none' type='submit'>
+              <Button isLoading={bagAddState === "LOADING"} colorScheme='orange' mt='12' rounded='none' type='submit'>
                 ADD TO BAG
               </Button>
             </form>
           </Box>
         </Grid>
       </Container>
-      {/* <AddedToBagAlert /> */}
+      <AddedToBagAlert />
     </>
   );
 };

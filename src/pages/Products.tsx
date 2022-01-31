@@ -2,30 +2,28 @@ import { Container, Grid, Heading } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import ProductItem from "../components/ProductItem/Index";
-import { fetchProducts, selectProducts } from "../features/product/productsSlice";
+import { selectProductsFetchState, selectProducts, productsFetch } from "../features/product/productsSlice";
 import { useAppSelector } from "../hooks";
 
 const Products = () => {
-  const { products, loading, error } = useAppSelector(selectProducts);
+  const products = useAppSelector(selectProducts);
+  const productsFetchState = useAppSelector(selectProductsFetchState);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(productsFetch());
   }, [dispatch]);
 
+  if (productsFetchState === "ERROR") return <p>Failed to load products.</p>;
   return (
     <>
       <Container maxW='container.lg'>
         <Heading my='12'>Menu</Heading>
-        {error && <p>Unable to load products</p>}
-        {loading && <p>Loading</p>}
-        {!loading && (
-          <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} gap={4}>
-            {products.map(product => (
-              <ProductItem key={product.id} product={product} />
-            ))}
-          </Grid>
-        )}
+        <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} columnGap={4} rowGap={8}>
+          {products.map(product => (
+            <ProductItem key={product.id} product={product} />
+          ))}
+        </Grid>
       </Container>
     </>
   );

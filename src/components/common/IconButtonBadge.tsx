@@ -11,13 +11,14 @@ const IconButtonBadge = ({ icon, text }: { icon: React.ReactElement; text?: stri
           position='absolute'
           bgColor='red.500'
           color='white'
-          right='-1'
-          fontSize='xs'
+          left='5'
+          fontSize='x-small'
           lineHeight='none'
           rounded='full'
           fontWeight='semibold'
           height='5'
           minW='5'
+          px='1'
           border='2px solid orange'
           zIndex={1}
         >
